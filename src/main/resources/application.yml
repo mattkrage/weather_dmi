@@ -1,0 +1,10 @@
+dmi:
+  api:
+    base-url: https://dmigw.govcloud.dk/v2/metObs
+    key: 106043ec-182f-478d-8266-c0cf6ac645da
+
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379

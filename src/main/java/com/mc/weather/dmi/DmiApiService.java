@@ -1,4 +1,4 @@
-package com.mc.weather.web;
+package com.mc.weather.dmi;
 
 import com.mc.weather.data.WeatherResponse;
 import org.springframework.beans.factory.annotation.Value;

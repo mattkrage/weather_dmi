@@ -5,7 +5,6 @@ import com.mc.weather.data.WeatherResponse;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
@@ -29,14 +28,20 @@ public class WeatherRedisService {
             Instant instant = Instant.parse(feature.getProperties().getObserved());
             Long observed = instant.getEpochSecond();
 
+            Integer lastObserved = getLastObserved(stationId);
             String key = "weather:station:" + stationId + ":latest";
-            Integer lastObserved = (Integer) redisTemplate.opsForValue().get(key);
 
             if (lastObserved == null || Long.valueOf(lastObserved.longValue()).compareTo(observed) < 0) {
                 redisTemplate.opsForValue().set(key, observed);
             }
         }
     }
+
+    public Integer getLastObserved(String stationId) {
+        String key = "weather:station:" + stationId + ":latest";
+        return (Integer) redisTemplate.opsForValue().get(key);
+    }
+
 
     private void saveProperties(WeatherResponse weatherResponse) {
         weatherResponse.getFeatures().forEach(feature -> {
@@ -52,7 +57,4 @@ public class WeatherRedisService {
         });
     }
 
-/*    public Instant getLastObservationDate(String stationId) {
-        redisTemplate.g
-    }*/
 }

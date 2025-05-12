@@ -25,29 +25,31 @@ public class DmiObservationController {
 
 
     @GetMapping("/get-weather")
-    public Set<String> getWeather(@RequestParam String stationId) {
+    public WeatherResponse getWeather(@RequestParam String stationId) {
 
 
 /*
         Instant lastObservationDate = weatherRedisService.getLastObservationDate(stationId);
 */
+        Integer lastObserved = weatherRedisService.getLastObserved(stationId);
+        System.out.println("LAST OBSERVED:" +lastObserved);
+        WeatherResponse observations = dmiApiService.getObservations(stationId, lastObserved);
 
-        WeatherResponse observations = dmiApiService.getObservations(stationId);
         weatherRedisService.saveWeatherData(observations);
 
 
-        Set<String> getUniqueParameterIds = observations.getFeatures().stream().map(feature -> feature.getProperties().getParameterId())
+  /*       Set<String> getUniqueParameterIds = observations.getFeatures().stream().map(feature -> feature.getProperties().getParameterId())
                 .collect(Collectors.toSet());
 
 
 
-/*        System.out.println(observations.getFeatures().stream()
+       System.out.println(observations.getFeatures().stream()
                 .filter(feature -> "temp_dew".equals(feature.getProperties().getParameterId()))
                 .mapToDouble(feature -> feature.getProperties().getValue())
                 .min());*/
 
 
 
-        return getUniqueParameterIds;
+        return observations;
     }
 }

@@ -3,6 +3,7 @@ package com.mc.weather.redis;
 import com.mc.weather.data.Feature;
 import com.mc.weather.data.WeatherResponse;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -13,13 +14,18 @@ public class WeatherRedisService {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public WeatherRedisService(RedisTemplate<String, Object> redisTemplate) {
+    private final WeatherTimeSeriesService  weatherTimeSeriesService;
+
+    public WeatherRedisService(RedisTemplate<String, Object> redisTemplate, WeatherTimeSeriesService  weatherTimeSeriesService) {
         this.redisTemplate = redisTemplate;
+        this.weatherTimeSeriesService = weatherTimeSeriesService;
     }
 
     public void saveWeatherData(WeatherResponse weatherResponse) {
         saveProperties(weatherResponse);
         saveLastObservationDate(weatherResponse.getFeatures());
+        saveTimeSeries(weatherResponse);
+        weatherTimeSeriesService.saveTimeSeries(weatherResponse);
     }
 
     private void saveLastObservationDate(List<Feature> features) {
@@ -55,6 +61,26 @@ public class WeatherRedisService {
             );
             redisTemplate.opsForValue().set(key, feature);
         });
+    }
+
+    public void saveTimeSeries(WeatherResponse response) {
+
+        ZSetOperations<String, Object> zSetOps = redisTemplate.opsForZSet();
+
+        for (Feature feature : response.getFeatures()) {
+            var props = feature.getProperties();
+            String stationId = props.getStationId();
+            String parameterId = props.getParameterId();
+            double value = props.getValue(); // Assuming value is numeric
+            Instant observedInstant = Instant.parse(props.getObserved());
+            long timestamp = observedInstant.getEpochSecond();
+
+            // Build Redis key for the station and parameter
+            String key = String.format("weather:timeseries:%s:%s", stationId, parameterId);
+
+            // Add the data to the Redis sorted set
+            zSetOps.add(key, value, timestamp);
+        }
     }
 
 }

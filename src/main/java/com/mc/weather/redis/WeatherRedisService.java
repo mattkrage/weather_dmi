@@ -1,14 +1,7 @@
 package com.mc.weather.redis;
 
-import com.mc.weather.data.Feature;
-import com.mc.weather.data.WeatherResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
+import com.mc.weather.data.dmi.WeatherResponse;
 import org.springframework.stereotype.Service;
-
-import java.time.Instant;
-import java.util.List;
 
 @Service
 public class WeatherRedisService {

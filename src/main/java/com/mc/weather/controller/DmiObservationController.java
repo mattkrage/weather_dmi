@@ -1,24 +1,26 @@
 package com.mc.weather.controller;
 
-import com.mc.weather.data.WeatherResponse;
+import com.mc.weather.data.dmi.WeatherResponse;
+import com.mc.weather.data.dto.TimeSeriesPoint;
 import com.mc.weather.redis.WeatherPropertiesService;
 import com.mc.weather.redis.WeatherRedisService;
 import com.mc.weather.dmi.DmiApiService;
+import com.mc.weather.redis.WeatherTimeSeriesService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Objects;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/dmi")
 public class DmiObservationController {
 
-      @Autowired
+    @Autowired
     private DmiApiService dmiApiService;
 
     @Autowired
@@ -27,32 +29,30 @@ public class DmiObservationController {
     @Autowired
     private WeatherPropertiesService weatherPropertiesService;
 
-    @GetMapping("/get-weather")
-    public WeatherResponse getWeather(@RequestParam String stationId) {
+    @Autowired
+    private WeatherTimeSeriesService weatherTimeSeriesService;
 
+    @GetMapping("/timeserie/{station}/{serie}")
+    public List<TimeSeriesPoint> getTimeSerie(@PathVariable String station,
+                                              @PathVariable String serie,
+                                              @RequestParam(required = false) Long from,
+                                              @RequestParam(required = false) Long to) {
 
-/*
-        Instant lastObservationDate = weatherRedisService.getLastObservationDate(stationId);
-*/
+       retrieveData(station);
+
+        long oneDayAgo = Instant.now().minus(1, ChronoUnit.DAYS).getEpochSecond();;
+        from = Objects.requireNonNullElse(from, oneDayAgo);
+        to = Objects.requireNonNullElse(to, (long) Double.POSITIVE_INFINITY);
+
+        return weatherTimeSeriesService.getTimeSeries(station, serie, from, to);
+    }
+
+    private void retrieveData(String stationId) {
         Integer lastObserved = weatherPropertiesService.getLastObserved(stationId);
-        System.out.println("LAST OBSERVED:" +lastObserved);
         WeatherResponse observations = dmiApiService.getObservations(stationId, lastObserved);
-
         weatherRedisService.saveWeatherData(observations);
 
-
-  /*       Set<String> getUniqueParameterIds = observations.getFeatures().stream().map(feature -> feature.getProperties().getParameterId())
-                .collect(Collectors.toSet());
-
-
-
-       System.out.println(observations.getFeatures().stream()
-                .filter(feature -> "temp_dew".equals(feature.getProperties().getParameterId()))
-                .mapToDouble(feature -> feature.getProperties().getValue())
-                .min());*/
-
-
-
-        return observations;
+        log.info("Last observed:{}", lastObserved);
+        log.info("Number of new observations: {}", observations.features().size());
     }
 }

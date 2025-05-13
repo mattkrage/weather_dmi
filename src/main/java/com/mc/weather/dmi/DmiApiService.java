@@ -1,6 +1,6 @@
 package com.mc.weather.dmi;
 
-import com.mc.weather.data.WeatherResponse;
+import com.mc.weather.data.dmi.WeatherResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -22,10 +22,9 @@ public class DmiApiService {
         String from = lastObserved != null ? DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochSecond(lastObserved+1)) : "..";
         String dateTime = from+"/..";
 
-        System.out.println("LAST OBSERVED2:" +dateTime);
-
         RestTemplate restTemplate = new RestTemplate();
         String url = String.format("%s/collections/observation/items?", baseUrl);
+
         return restTemplate.getForObject(url + "stationId={1}&datetime={2}&api-key={3}", WeatherResponse.class, stationId, dateTime, apiKey);
     }
 }

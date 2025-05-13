@@ -1,8 +1,8 @@
 package com.mc.weather;
 
-import com.mc.weather.data.Feature;
-import com.mc.weather.data.Properties;
-import com.mc.weather.data.WeatherResponse;
+import com.mc.weather.data.dmi.Feature;
+import com.mc.weather.data.dmi.Properties;
+import com.mc.weather.data.dmi.WeatherResponse;
 import com.mc.weather.redis.RedisKeyBuilder;
 import com.mc.weather.redis.WeatherPropertiesService;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ class WeatherPropertiesServiceTest {
 
 
     @Test
-    void testSaveWeatherData_savesFeatureAndLatestTimestamp() {
+    public void testSaveWeatherData_savesFeatureAndLatestTimestamp() {
         // Arrange
         Properties properties = new Properties(null, "2025-05-09T02:00:00Z", "humidity", "06186", 22.5);
         Feature feature = Feature.withPropertiesOnly(properties);
@@ -58,7 +58,7 @@ class WeatherPropertiesServiceTest {
     }
 
     @Test
-    void shouldNotUpdateLatestWhenFeatureHasOlderObservation() {
+    public void shouldNotUpdateLatestWhenFeatureHasOlderObservation() {
         // Given
         Properties properties = new Properties(null, "2025-05-09T01:00:00Z", "humidity", "06186", 22.5);
         Feature feature = Feature.withPropertiesOnly(properties);
@@ -86,7 +86,7 @@ class WeatherPropertiesServiceTest {
 
 
     @Test
-    void shouldUpdateLatestWhenFeatureHasNewerObservation() {
+    public void shouldUpdateLatestWhenFeatureHasNewerObservation() {
         // Given
         Properties properties = new Properties(null, "2025-05-09T01:00:00Z", "humidity", "06186", 22.5);
         Feature feature = Feature.withPropertiesOnly(properties);

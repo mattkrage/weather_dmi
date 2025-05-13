@@ -1,7 +1,7 @@
 package com.mc.weather.redis;
 
-import com.mc.weather.data.Feature;
-import com.mc.weather.data.WeatherResponse;
+import com.mc.weather.data.dmi.Feature;
+import com.mc.weather.data.dmi.WeatherResponse;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 

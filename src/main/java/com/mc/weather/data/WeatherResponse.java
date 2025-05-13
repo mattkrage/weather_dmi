@@ -5,20 +5,14 @@ import lombok.Data;
 
 import java.util.List;
 
-@Data
-public class WeatherResponse {
-    @JsonProperty("type")
-    private String type;
-
-    @JsonProperty("features")
-    private List<Feature> features;
-
-    @JsonProperty("timeStamp")
-    private String timeStamp;
-
-    @JsonProperty("numberReturned")
-    private int numberReturned;
-
-    @JsonProperty("links")
-    private List<Link> links;
+public record WeatherResponse (
+    @JsonProperty("type") String type,
+    @JsonProperty("features") List<Feature> features,
+    @JsonProperty("timeStamp") String timeStamp,
+    @JsonProperty("numberReturned") int numberReturned,
+    @JsonProperty("links") List<Link> links
+) {
+    public static  WeatherResponse withFeaturesOnly(List<Feature> features) {
+        return new WeatherResponse(null, features, null, 1, null);
+    }
 }

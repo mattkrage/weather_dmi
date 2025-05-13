@@ -18,13 +18,13 @@ public class WeatherPropertiesService {
 
     public void saveProperties(WeatherResponse weatherResponse) {
 
-        for (Feature feature : weatherResponse.getFeatures()) {
-            Instant instant = Instant.parse(feature.getProperties().getObserved());
+        for (Feature feature : weatherResponse.features()) {
+            Instant instant = Instant.parse(feature.properties().observed());
             Long observed = instant.getEpochSecond();
-            String stationId = feature.getProperties().getStationId();
+            String stationId = feature.properties().stationId();
             String key = RedisKeyBuilder.buildKey(
                     stationId,
-                    feature.getProperties().getParameterId(),
+                    feature.properties().parameterId(),
                     observed
             );
 

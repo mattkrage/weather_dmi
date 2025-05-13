@@ -35,18 +35,13 @@ class WeatherPropertiesServiceTest {
     @Test
     void testSaveWeatherData_savesFeatureAndLatestTimestamp() {
         // Arrange
-        Feature feature = new Feature();
-        Properties properties = new Properties();
-        properties.setStationId("06186");
-        properties.setParameterId("humidity");
-        properties.setObserved("2025-05-09T02:00:00Z");
-        feature.setProperties(properties);
+        Properties properties = new Properties(null, "2025-05-09T02:00:00Z", "humidity", "06186", 22.5);
+        Feature feature = Feature.withPropertiesOnly(properties);
+        WeatherResponse response = WeatherResponse.withFeaturesOnly(List.of(feature));
 
-        WeatherResponse response = new WeatherResponse();
-        response.setFeatures(List.of(feature));
 
         String latestKey = "weather:station:06186:latest";
-        Long observedTimestamp = Instant.parse(properties.getObserved()).getEpochSecond();
+        Long observedTimestamp = Instant.parse(properties.observed()).getEpochSecond();
 
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get(latestKey)).thenReturn(null); // No previous value
@@ -65,14 +60,9 @@ class WeatherPropertiesServiceTest {
     @Test
     void shouldNotUpdateLatestWhenFeatureHasOlderObservation() {
         // Given
-        Feature feature = new Feature();
-        Properties properties = new Properties();
-        properties.setStationId("06186");
-        properties.setParameterId("humidity");
-        properties.setObserved("2025-05-09T01:00:00Z");
-        feature.setProperties(properties);
-        WeatherResponse response = new WeatherResponse();
-        response.setFeatures(List.of(feature));
+        Properties properties = new Properties(null, "2025-05-09T01:00:00Z", "humidity", "06186", 22.5);
+        Feature feature = Feature.withPropertiesOnly(properties);
+        WeatherResponse response = WeatherResponse.withFeaturesOnly(List.of(feature));
 
         String latestKey = "weather:station:06186:latest";
         long existingLatest = Instant.parse("2025-05-09T02:00:00Z").getEpochSecond(); // newer
@@ -98,14 +88,9 @@ class WeatherPropertiesServiceTest {
     @Test
     void shouldUpdateLatestWhenFeatureHasNewerObservation() {
         // Given
-        Feature feature = new Feature();
-        Properties properties = new Properties();
-        properties.setStationId("06186");
-        properties.setParameterId("humidity");
-        properties.setObserved("2025-05-09T01:00:00Z");
-        feature.setProperties(properties);
-        WeatherResponse response = new WeatherResponse();
-        response.setFeatures(List.of(feature));
+        Properties properties = new Properties(null, "2025-05-09T01:00:00Z", "humidity", "06186", 22.5);
+        Feature feature = Feature.withPropertiesOnly(properties);
+        WeatherResponse response = WeatherResponse.withFeaturesOnly(List.of(feature));
 
         String latestKey = "weather:station:06186:latest";
         long existingLatest = Instant.parse("2025-04-09T02:00:00Z").getEpochSecond(); // newer

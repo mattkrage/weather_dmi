@@ -22,12 +22,12 @@ public class WeatherTimeSeriesService {
         ZSetOperations<String, Object> zSetOps = redisTemplate.opsForZSet();
 
         // Iterate through features to save time-series data
-        for (Feature feature : response.getFeatures()) {
-            var props = feature.getProperties();
-            String stationId = props.getStationId();
-            String parameterId = props.getParameterId();
-            double value = props.getValue();
-            Instant observedInstant = Instant.parse(props.getObserved());
+        for (Feature feature : response.features()) {
+            var props = feature.properties();
+            String stationId = props.stationId();
+            String parameterId = props.parameterId();
+            double value = props.value();
+            Instant observedInstant = Instant.parse(props.observed());
             long timestamp = observedInstant.getEpochSecond();
 
             // Build Redis key for the station and parameter

@@ -39,16 +39,10 @@ class WeatherTimeSeriesServiceTest {
     @Test
     void testSaveTimeSeries() {
         // Arrange
-        Feature feature = new Feature();
-        Properties properties = new Properties();
-        properties.setStationId("06186");
-        properties.setParameterId("temperature");
-        properties.setObserved("2025-05-09T02:40:42.885615Z");
-        properties.setValue(22.5);
-        feature.setProperties(properties);
+        Properties properties = new Properties(null, "2025-05-09T02:40:42.885615Z", "temperature", "06186", 22.5);
+        Feature feature = Feature.withPropertiesOnly(properties);
+        WeatherResponse response = WeatherResponse.withFeaturesOnly(List.of(feature));
 
-        WeatherResponse response = new WeatherResponse();
-        response.setFeatures(List.of(feature));
 
         String expectedKey = "weather:timeseries:06186:temperature";
         double timestamp = Instant.parse("2025-05-09T02:40:42.885615Z").getEpochSecond();

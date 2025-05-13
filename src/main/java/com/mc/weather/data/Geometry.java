@@ -5,11 +5,7 @@ import lombok.Data;
 
 import java.util.List;
 
-@Data
-public class Geometry {
-    @JsonProperty("coordinates")
-    private List<Double> coordinates;
-
-    @JsonProperty("type")
-    private String type;
-}
+public record Geometry (
+    @JsonProperty("coordinates") List<Double> coordinates,
+    @JsonProperty("type") String type
+){}

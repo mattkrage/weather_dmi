@@ -3,18 +3,14 @@ package com.mc.weather.data;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
-@Data
-public class Feature {
-    @JsonProperty("geometry")
-    private Geometry geometry;
 
-    @JsonProperty("id")
-    private String id;
+public record Feature (
+    @JsonProperty("geometry") Geometry geometry,
+    @JsonProperty("id") String id,
+    @JsonProperty("type") String type,
+    @JsonProperty("properties") Properties properties){
 
-    @JsonProperty("type")
-    private String type;
-
-    @JsonProperty("properties")
-    private Properties properties;
-
+    public static Feature withPropertiesOnly(Properties properties) {
+        return new Feature(null, null, null, properties);
+    }
 }

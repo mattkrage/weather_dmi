@@ -31,7 +31,7 @@ public class WeatherTimeSeriesService {
             long timestamp = observedInstant.getEpochSecond();
 
             // Build Redis key for the station and parameter
-            String key = String.format("weather:timeseries:%s:%s", stationId, parameterId);
+            String key = RedisKeyBuilder.buildKeyForTimeSeries(stationId, parameterId);
 
             // Add the data to the Redis sorted set (using timestamp as the score)
             zSetOps.add(key, value, timestamp);

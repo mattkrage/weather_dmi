@@ -1,6 +1,7 @@
 package com.mc.weather.controller;
 
 import com.mc.weather.data.WeatherResponse;
+import com.mc.weather.redis.WeatherPropertiesService;
 import com.mc.weather.redis.WeatherRedisService;
 import com.mc.weather.dmi.DmiApiService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,8 @@ public class DmiObservationController {
     @Autowired
     private WeatherRedisService weatherRedisService;
 
+    @Autowired
+    private WeatherPropertiesService weatherPropertiesService;
 
     @GetMapping("/get-weather")
     public WeatherResponse getWeather(@RequestParam String stationId) {
@@ -31,7 +34,7 @@ public class DmiObservationController {
 /*
         Instant lastObservationDate = weatherRedisService.getLastObservationDate(stationId);
 */
-        Integer lastObserved = weatherRedisService.getLastObserved(stationId);
+        Integer lastObserved = weatherPropertiesService.getLastObserved(stationId);
         System.out.println("LAST OBSERVED:" +lastObserved);
         WeatherResponse observations = dmiApiService.getObservations(stationId, lastObserved);
 

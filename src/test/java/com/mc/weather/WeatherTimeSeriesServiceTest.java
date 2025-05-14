@@ -14,6 +14,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import reactor.core.publisher.Flux;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -56,7 +57,7 @@ class WeatherTimeSeriesServiceTest {
         double timestamp = Instant.parse("2025-05-09T02:40:42.885615Z").getEpochSecond();
 
         // Act
-        weatherTimeSeriesService.saveTimeSeries(response);
+        weatherTimeSeriesService.saveTimeSeries(Flux.just(feature)).block();
 
         // Assert
         verify(zSetOps).add(eq(expectedKey), eq(22.5), eq(timestamp));

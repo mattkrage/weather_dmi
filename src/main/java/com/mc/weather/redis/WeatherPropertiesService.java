@@ -2,11 +2,17 @@ package com.mc.weather.redis;
 
 import com.mc.weather.data.dmi.Feature;
 import com.mc.weather.data.dmi.WeatherResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.Instant;
 
+
+@Slf4j
 @Service
 public class WeatherPropertiesService {
 
@@ -16,22 +22,25 @@ public class WeatherPropertiesService {
         this.redisTemplate = redisTemplate;
     }
 
-    public void saveProperties(WeatherResponse weatherResponse) {
+    public Mono<Void> saveProperties(Flux<Feature> features) {
 
-        for (Feature feature : weatherResponse.features()) {
-            Instant instant = Instant.parse(feature.properties().observed());
-            Long observed = instant.getEpochSecond();
-            String stationId = feature.properties().stationId();
-            String key = RedisKeyBuilder.buildKey(
-                    stationId,
-                    feature.properties().parameterId(),
-                    observed
-            );
+        features = features.doOnNext(feature -> log.info("FEATURE RECEIVED: " + feature));
 
-            saveLatestTimestamp(stationId, observed);
-            redisTemplate.opsForValue().set(key, feature);
-
-        }
+             return features
+                    .publishOn(Schedulers.boundedElastic())
+                     .flatMap(feature -> Mono.fromRunnable(() -> {
+                                 Instant instant = Instant.parse(feature.properties().observed());
+                                 Long observed = instant.getEpochSecond();
+                                 String stationId = feature.properties().stationId();
+                                 String key = RedisKeyBuilder.buildKey(
+                                         stationId,
+                                         feature.properties().parameterId(),
+                                         observed);
+                                 saveLatestTimestamp(stationId, observed);
+                                 redisTemplate
+                                         .opsForValue().set(key, feature);
+                             }
+                             )).then();
 
     }
 

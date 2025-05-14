@@ -8,3 +8,5 @@ spring:
     redis:
       host: localhost
       port: 6379
+  codec:
+    max-in-memory-size: 10MB

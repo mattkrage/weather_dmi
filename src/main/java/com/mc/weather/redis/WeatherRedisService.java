@@ -1,7 +1,9 @@
 package com.mc.weather.redis;
 
+import com.mc.weather.data.dmi.Feature;
 import com.mc.weather.data.dmi.WeatherResponse;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 @Service
 public class WeatherRedisService {
@@ -15,9 +17,9 @@ public class WeatherRedisService {
         this.weatherPropertiesService = weatherPropertiesService;
     }
 
-    public void saveWeatherData(WeatherResponse weatherResponse) {
-        weatherPropertiesService.saveProperties(weatherResponse);
-        weatherTimeSeriesService.saveTimeSeries(weatherResponse);
+    public void saveWeatherData(Flux<Feature> features) {
+        weatherPropertiesService.saveProperties(features).subscribe();
+        weatherTimeSeriesService.saveTimeSeries(features).subscribe();
     }
 
 

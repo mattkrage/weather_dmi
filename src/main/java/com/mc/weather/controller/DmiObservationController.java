@@ -1,5 +1,6 @@
 package com.mc.weather.controller;
 
+import com.mc.weather.data.dmi.Feature;
 import com.mc.weather.data.dmi.WeatherResponse;
 import com.mc.weather.data.dto.TimeSeriesPoint;
 import com.mc.weather.redis.WeatherPropertiesService;
@@ -9,6 +10,7 @@ import com.mc.weather.redis.WeatherTimeSeriesService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -49,10 +51,12 @@ public class DmiObservationController {
 
     private void retrieveData(String stationId) {
         Integer lastObserved = weatherPropertiesService.getLastObserved(stationId);
-        WeatherResponse observations = dmiApiService.getObservations(stationId, lastObserved);
+        log.info("Last observed:{}", lastObserved);
+
+        Flux<Feature> observations = dmiApiService.getObservations(stationId, lastObserved);
         weatherRedisService.saveWeatherData(observations);
 
-        log.info("Last observed:{}", lastObserved);
-        log.info("Number of new observations: {}", observations.features().size());
+
+        //log.info("Number of new observations: {}", observations.features().size());
     }
 }

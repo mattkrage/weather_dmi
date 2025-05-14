@@ -1,9 +1,14 @@
 package com.mc.weather.dmi;
 
+import com.mc.weather.data.dmi.Feature;
 import com.mc.weather.data.dmi.WeatherResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
@@ -17,7 +22,10 @@ public class DmiApiService {
     @Value("${dmi.api.base-url}")
     private String baseUrl;
 
-    public WeatherResponse getObservations(String stationId, Integer lastObserved) {
+    @Autowired
+    public WebClient webClient;
+
+    public Flux<Feature> getObservations(String stationId, Integer lastObserved) {
 
         String from = lastObserved != null ? DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochSecond(lastObserved+1)) : "..";
         String dateTime = from+"/..";
@@ -25,6 +33,15 @@ public class DmiApiService {
         RestTemplate restTemplate = new RestTemplate();
         String url = String.format("%s/collections/observation/items?", baseUrl);
 
-        return restTemplate.getForObject(url + "stationId={1}&datetime={2}&api-key={3}", WeatherResponse.class, stationId, dateTime, apiKey);
+        return webClient.get()
+                        .uri(url + "stationId={1}&datetime={2}&api-key={3}", stationId, dateTime, apiKey)
+                        .retrieve()
+                .bodyToMono(WeatherResponse.class)
+                .flatMapMany(response -> Flux.fromIterable(response.features()));
+
+/*        WeatherResponse resp ;
+        rawResults.subscribe(i -> {return i;});
+
+        return restTemplate.getForObject(url + "stationId={1}&datetime={2}&api-key={3}", WeatherResponse.class, stationId, dateTime, apiKey);*/
     }
 }

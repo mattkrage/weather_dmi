@@ -6,6 +6,9 @@ import com.mc.weather.data.dto.TimeSeriesPoint;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -22,27 +25,31 @@ public class WeatherTimeSeriesService {
         this.redisTemplate = redisTemplate;
     }
 
-    public void saveTimeSeries(WeatherResponse response) {
+    public Mono<Void> saveTimeSeries(Flux<Feature> features) {
 
-        for (Feature feature : response.features()) {
-            var props = feature.properties();
-            String stationId = props.stationId();
-            String parameterId = props.parameterId();
-            double value = props.value();
-            Instant observedInstant = Instant.parse(props.observed());
-            long timestamp = observedInstant.getEpochSecond();
+        return features
+                .publishOn(Schedulers.boundedElastic()) // move to a thread that allows blocking IO
+                .flatMap(feature -> Mono.fromRunnable(() -> {
+                //.doOnNext(feature -> {
+                    var props = feature.properties();
+                    String stationId = props.stationId();
+                    String parameterId = props.parameterId();
+                    double value = props.value();
+                    Instant observedInstant = Instant.parse(props.observed());
+                    long timestamp = observedInstant.getEpochSecond();
 
-            String key = RedisKeyBuilder.buildKeyForTimeSeries(stationId, parameterId);
+                    String key = RedisKeyBuilder.buildKeyForTimeSeries(stationId, parameterId);
 
-            redisTemplate.opsForZSet().add(key, value, timestamp);
-        }
+                    redisTemplate.opsForZSet().add(key, value, timestamp); // blocking call
+                }))
+                .then();
+
     }
 
     public List<TimeSeriesPoint> getTimeSeries(String stationId, String parameterId, long startTimestamp, long endTimestamp) {
 
         String key = RedisKeyBuilder.buildKeyForTimeSeries(stationId, parameterId);
 
-        // Fetch observations within the specified timestamp range
         ZSetOperations<String, Object> zSetOps = redisTemplate.opsForZSet();
         Set<ZSetOperations.TypedTuple<Object>> rawResults = zSetOps.rangeByScoreWithScores(key, startTimestamp, endTimestamp);
 

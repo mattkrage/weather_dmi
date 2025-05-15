@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -40,21 +41,21 @@ public class DmiObservationController {
                                               @RequestParam(required = false) Long from,
                                               @RequestParam(required = false) Long to) {
 
-       retrieveData(station);
+       retrieveData(station).subscribe();
 
         long oneDayAgo = Instant.now().minus(1, ChronoUnit.DAYS).getEpochSecond();;
         from = Objects.requireNonNullElse(from, oneDayAgo);
         to = Objects.requireNonNullElse(to, (long) Double.POSITIVE_INFINITY);
 
-        return weatherTimeSeriesService.getTimeSeries(station, serie, from, to);
+        return  weatherTimeSeriesService.getTimeSeries(station, serie, from, to);
     }
 
-    private void retrieveData(String stationId) {
+    private Mono<Void> retrieveData(String stationId) {
         Integer lastObserved = weatherPropertiesService.getLastObserved(stationId);
         log.info("Last observed:{}", lastObserved);
 
         Flux<Feature> observations = dmiApiService.getObservations(stationId, lastObserved);
-        weatherRedisService.saveWeatherData(observations);
+        return weatherRedisService.saveWeatherData(observations);
 
 
         //log.info("Number of new observations: {}", observations.features().size());

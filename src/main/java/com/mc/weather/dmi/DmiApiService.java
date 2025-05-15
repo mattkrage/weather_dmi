@@ -38,10 +38,5 @@ public class DmiApiService {
                         .retrieve()
                 .bodyToMono(WeatherResponse.class)
                 .flatMapMany(response -> Flux.fromIterable(response.features()));
-
-/*        WeatherResponse resp ;
-        rawResults.subscribe(i -> {return i;});
-
-        return restTemplate.getForObject(url + "stationId={1}&datetime={2}&api-key={3}", WeatherResponse.class, stationId, dateTime, apiKey);*/
     }
 }

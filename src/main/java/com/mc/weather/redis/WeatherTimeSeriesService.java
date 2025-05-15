@@ -25,27 +25,6 @@ public class WeatherTimeSeriesService {
         this.redisTemplate = redisTemplate;
     }
 
-    public Mono<Void> saveTimeSeries(Flux<Feature> features) {
-
-        return features
-                .publishOn(Schedulers.boundedElastic()) // move to a thread that allows blocking IO
-                .flatMap(feature -> Mono.fromRunnable(() -> {
-                //.doOnNext(feature -> {
-                    var props = feature.properties();
-                    String stationId = props.stationId();
-                    String parameterId = props.parameterId();
-                    double value = props.value();
-                    Instant observedInstant = Instant.parse(props.observed());
-                    long timestamp = observedInstant.getEpochSecond();
-
-                    String key = RedisKeyBuilder.buildKeyForTimeSeries(stationId, parameterId);
-
-                    redisTemplate.opsForZSet().add(key, value, timestamp); // blocking call
-                }))
-                .then();
-
-    }
-
     public List<TimeSeriesPoint> getTimeSeries(String stationId, String parameterId, long startTimestamp, long endTimestamp) {
 
         String key = RedisKeyBuilder.buildKeyForTimeSeries(stationId, parameterId);

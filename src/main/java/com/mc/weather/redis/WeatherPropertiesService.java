@@ -29,19 +29,37 @@ public class WeatherPropertiesService {
              return features
                     .publishOn(Schedulers.boundedElastic())
                      .flatMap(feature -> Mono.fromRunnable(() -> {
-                                 Instant instant = Instant.parse(feature.properties().observed());
-                                 Long observed = instant.getEpochSecond();
-                                 String stationId = feature.properties().stationId();
-                                 String key = RedisKeyBuilder.buildKey(
-                                         stationId,
-                                         feature.properties().parameterId(),
-                                         observed);
-                                 saveLatestTimestamp(stationId, observed);
-                                 redisTemplate
-                                         .opsForValue().set(key, feature);
+                                 saveProperty(feature);
+                                 saveTimeSerie(feature);
                              }
                              )).then();
 
+    }
+
+    private void saveProperty(Feature feature) {
+        Instant instant = Instant.parse(feature.properties().observed());
+        Long observed = instant.getEpochSecond();
+        String stationId = feature.properties().stationId();
+        String key = RedisKeyBuilder.buildKey(
+                stationId,
+                feature.properties().parameterId(),
+                observed);
+        saveLatestTimestamp(stationId, observed);
+        redisTemplate
+                .opsForValue().set(key, feature);
+    }
+
+    private void saveTimeSerie(Feature feature) {
+        var props = feature.properties();
+        String stationId = props.stationId();
+        String parameterId = props.parameterId();
+        double value = props.value();
+        Instant observedInstant = Instant.parse(props.observed());
+        long timestamp = observedInstant.getEpochSecond();
+
+        String key = RedisKeyBuilder.buildKeyForTimeSeries(stationId, parameterId);
+
+        redisTemplate.opsForZSet().add(key, value, timestamp); // blocking call
     }
 
     private void saveLatestTimestamp(String stationId, Long observed) {

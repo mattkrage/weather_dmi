@@ -1,23 +1,15 @@
 package com.mc.weather.redis;
 
-import com.mc.weather.data.dmi.Feature;
-import com.mc.weather.data.dmi.WeatherResponse;
 import com.mc.weather.data.dto.TimeSeriesPoint;
 import org.springframework.data.domain.Range;
 import org.springframework.data.redis.connection.Limit;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Set;
 
 
 @Service

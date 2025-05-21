@@ -5,9 +5,7 @@ import com.mc.weather.data.dmi.WeatherResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
@@ -32,8 +30,6 @@ public class DmiApiService {
 
         String from = lastObserved != null ? DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochSecond(lastObserved+1)) : "..";
         String dateTime = from+"/..";
-
-        RestTemplate restTemplate = new RestTemplate();
         String url = String.format("%s/collections/observation/items?", baseUrl);
 
         Instant start = Instant.now();

@@ -1,7 +1,6 @@
 package com.mc.weather.redis;
 
 import com.mc.weather.data.dmi.Feature;
-import com.mc.weather.data.dmi.WeatherResponse;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

@@ -1,15 +1,11 @@
 package com.mc.weather.redis;
 
 import com.mc.weather.data.dmi.Feature;
-import com.mc.weather.data.dmi.WeatherResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
-
 import java.time.Instant;
 
 

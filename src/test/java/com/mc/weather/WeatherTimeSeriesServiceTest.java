@@ -1,13 +1,9 @@
 package com.mc.weather;
 
-import com.mc.weather.data.dmi.Feature;
-import com.mc.weather.data.dmi.Properties;
-import com.mc.weather.data.dmi.WeatherResponse;
 import com.mc.weather.data.dto.TimeSeriesPoint;
 import com.mc.weather.redis.RedisKeyBuilder;
 import com.mc.weather.redis.WeatherTimeSeriesService;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -20,13 +16,9 @@ import reactor.core.publisher.Flux;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class WeatherTimeSeriesServiceTest {
@@ -46,26 +38,7 @@ class WeatherTimeSeriesServiceTest {
         when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
     }
 
-    @Disabled
-    @Test
-    public void testSaveTimeSeries() {
-        // Arrange
-        Properties properties = new Properties(null, "2025-05-09T02:40:42.885615Z", "temperature", "06186", 22.5);
-        Feature feature = Feature.withPropertiesOnly(properties);
-        WeatherResponse response = WeatherResponse.withFeaturesOnly(List.of(feature));
-
-
-        String expectedKey = "weather:timeseries:06186:temperature";
-        double timestamp = Instant.parse("2025-05-09T02:40:42.885615Z").getEpochSecond();
-
-        // Act
-       // weatherTimeSeriesService.saveTimeSeries(Flux.just(feature)).block();
-
-        // Assert
-        verify(zSetOps).add(eq(expectedKey), eq(22.5), eq(timestamp));
-    }
-
-    @Test
+     @Test
     public void testGetTimeSeries() {
         // Given
         String stationId = "06186";

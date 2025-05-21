@@ -2,7 +2,6 @@ package com.mc.weather;
 
 import com.mc.weather.data.dmi.Feature;
 import com.mc.weather.data.dmi.Properties;
-import com.mc.weather.data.dmi.WeatherResponse;
 import com.mc.weather.redis.RedisKeyBuilder;
 import com.mc.weather.redis.WeatherPropertiesService;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +16,6 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Instant;
-import java.util.List;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;

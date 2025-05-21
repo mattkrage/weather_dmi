@@ -5,16 +5,16 @@ import com.mc.weather.data.dmi.Properties;
 import com.mc.weather.data.dmi.WeatherResponse;
 import com.mc.weather.redis.RedisKeyBuilder;
 import com.mc.weather.redis.WeatherPropertiesService;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.data.redis.core.*;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.time.Instant;
 import java.util.List;
@@ -26,17 +26,22 @@ import static org.mockito.Mockito.*;
 class WeatherPropertiesServiceTest {
 
     @Mock
-    private RedisTemplate<String, Object> redisTemplate;
+    private ReactiveRedisTemplate<String, Object> reactiveRedisTemplate;
 
     @Mock
-    private ValueOperations<String, Object> valueOperations;
+    private ReactiveValueOperations<String, Object> valueOperations;
 
     @Mock
-    private ZSetOperations<String, Object> zSetOps;
+    private ReactiveZSetOperations<String, Object> zSetOps;
 
     @InjectMocks
     private WeatherPropertiesService weatherPropertiesService;
 
+    @BeforeEach
+    void setup() {
+        when(reactiveRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(reactiveRedisTemplate.opsForZSet()).thenReturn(zSetOps);
+    }
 
     @Test
     public void testSaveWeatherData_savesFeatureAndLatestTimestamp() {
@@ -47,9 +52,11 @@ class WeatherPropertiesServiceTest {
         String latestKey = "weather:station:06186:latest";
         Long observedTimestamp = Instant.parse(properties.observed()).getEpochSecond();
 
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
-        when(valueOperations.get(latestKey)).thenReturn(null); // No previous value
+        when(reactiveRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(reactiveRedisTemplate.opsForZSet()).thenReturn(zSetOps);
+        when(valueOperations.get(latestKey)).thenReturn(Mono.empty()); // No previous value
+        when(valueOperations.set(anyString(), any())).thenReturn(Mono.just(true));
+        when(zSetOps.add(anyString(), any(), anyDouble())).thenReturn(Mono.just(true));
 
         // Act
         weatherPropertiesService.saveProperties(Flux.just(feature)).block();
@@ -70,31 +77,28 @@ class WeatherPropertiesServiceTest {
     }
 
     @Test
-    public void shouldNotUpdateLatestWhenFeatureHasOlderObservation() {
-        // Given
-        Properties properties = new Properties(null, "2025-05-09T01:00:00Z", "humidity", "06186", 22.5);
-        Feature feature = Feature.withPropertiesOnly(properties);
-        WeatherResponse response = WeatherResponse.withFeaturesOnly(List.of(feature));
+    void shouldSaveFeatureAndUpdateLatestIfNewer() {
+        // Arrange
+        Properties props = new Properties(null, "2025-05-09T02:00:00Z", "humidity", "06186", 22.5);
+        Feature feature = Feature.withPropertiesOnly(props);
 
-        String latestKey = "weather:station:06186:latest";
-        long existingLatest = Instant.parse("2025-05-09T02:00:00Z").getEpochSecond(); // newer
-        long observedTimestamp = Instant.parse("2025-05-09T01:00:00Z").getEpochSecond(); // older
+        long observed = Instant.parse(props.observed()).getEpochSecond();
+        String featureKey = RedisKeyBuilder.buildKey("06186", "humidity", observed);
+        String timeSeriesKey = RedisKeyBuilder.buildKeyForTimeSeries("06186", "humidity");
+        String latestKey = RedisKeyBuilder.buildKeyForLatestTimestamp("06186");
 
-        // Redis mocks
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
-        when(valueOperations.get(latestKey)).thenReturn((int) existingLatest); // simulate stored latest
+        when(valueOperations.get(latestKey)).thenReturn(Mono.just(Instant.parse("2025-05-08T02:00:00Z").getEpochSecond()));
+        when(valueOperations.set(eq(featureKey), eq(feature))).thenReturn(Mono.just(true));
+        when(valueOperations.set(eq(latestKey), eq(observed))).thenReturn(Mono.just(true));
+        when(zSetOps.add(eq(timeSeriesKey), eq(22.5), eq((double) observed))).thenReturn(Mono.just(true));
 
-        // Act
-        weatherPropertiesService.saveProperties(Flux.just(feature)).block();
+        // Act & Assert
+        StepVerifier.create(weatherPropertiesService.saveProperties(Flux.just(feature)))
+                .verifyComplete();
 
-        verify(valueOperations).set(
-                eq(RedisKeyBuilder.buildKey("06186", "humidity", observedTimestamp)),
-                eq(feature)
-        );
-
-        // Verify that the latest is NOT updated
-        verify(valueOperations, never()).set(eq(latestKey), anyLong());
+        verify(valueOperations).set(featureKey, feature);
+        verify(valueOperations).set(latestKey, observed);
+        verify(zSetOps).add(timeSeriesKey, 22.5, (double) observed);
     }
 
 
@@ -103,17 +107,17 @@ class WeatherPropertiesServiceTest {
         // Given
         Properties properties = new Properties(null, "2025-05-09T01:00:00Z", "humidity", "06186", 22.5);
         Feature feature = Feature.withPropertiesOnly(properties);
-        WeatherResponse response = WeatherResponse.withFeaturesOnly(List.of(feature));
 
         String latestKey = "weather:station:06186:latest";
         long existingLatest = Instant.parse("2025-04-09T02:00:00Z").getEpochSecond(); // newer
         long observedTimestamp = Instant.parse("2025-05-09T01:00:00Z").getEpochSecond(); // older
 
         // Redis mocks
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
-        when(valueOperations.get(latestKey)).thenReturn((int) existingLatest); // simulate stored latest
-
+        when(reactiveRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(reactiveRedisTemplate.opsForZSet()).thenReturn(zSetOps);
+        when(valueOperations.get(latestKey)).thenReturn(Mono.just(existingLatest)); // simulate stored latest
+        when(valueOperations.set(anyString(), any())).thenReturn(Mono.just(true));
+        when(zSetOps.add(anyString(), any(), anyDouble())).thenReturn(Mono.just(true));
         // Act
         weatherPropertiesService.saveProperties(Flux.just(feature)).block();
 

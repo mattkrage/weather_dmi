@@ -10,3 +10,18 @@ spring:
       port: 6379
   codec:
     max-in-memory-size: 10MB
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    org.springframework.data.redis: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,httptrace
+  metrics:
+    enable:
+      http.server.requests: true

@@ -35,9 +35,8 @@ public class WeatherTimeSeriesService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                 .withZone(ZoneId.of("Europe/Copenhagen")); // Danish local time
 
-        // Create Range and Limit objects
         Range<Double> scoreRange = Range.closed((double)startTimestamp, (double)endTimestamp);
-        Limit limit = Limit.unlimited();  // or specify your limit if needed
+        Limit limit = Limit.unlimited();
 
         return reactiveRedisTemplate.opsForZSet()
                 .rangeByScoreWithScores(key, scoreRange, limit)
@@ -45,21 +44,5 @@ public class WeatherTimeSeriesService {
                         formatter.format(Instant.ofEpochSecond(tuple.getScore().longValue())),
                         (Double) tuple.getValue()
                 ));
-/*
-        ZSetOperations<String, Object> zSetOps = redisTemplate.opsForZSet();
-        Set<ZSetOperations.TypedTuple<Object>> rawResults = zSetOps.rangeByScoreWithScores(key, startTimestamp, endTimestamp);
-*/
-
-
-
-/*
-        List<TimeSeriesPoint> points = rawResults.stream()
-                .map(tuple -> new TimeSeriesPoint(
-                        formatter.format(Instant.ofEpochSecond(tuple.getScore().longValue())),
-                        (Double) tuple.getValue()))
-                .toList();
-
-        return points;
-*/
     }
 }

@@ -9,10 +9,12 @@ import com.mc.weather.dmi.DmiApiService;
 import com.mc.weather.redis.WeatherTimeSeriesService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -45,18 +47,25 @@ public class DmiObservationController {
         from = Objects.requireNonNullElse(from, oneDayAgo);
         to = Objects.requireNonNullElse(to, (long) Double.POSITIVE_INFINITY);
 
-        return retrieveData(station)
+        StopWatch sw = new StopWatch();
+        sw.start("task1");
+
+        Flux<TimeSeriesPoint> timeSeriesPointFlux = retrieveData(station)
                 .thenMany(weatherTimeSeriesService.getTimeSeries(station, serie, from, to));
+
+        sw.stop();
+        log.info(">>>>>"+sw.prettyPrint());
+
+        return timeSeriesPointFlux;
     }
 
     private Mono<Void> retrieveData(String stationId) {
-        Integer lastObserved = weatherPropertiesService.getLastObserved(stationId);
-        log.info("Last observed:{}", lastObserved);
 
-        Flux<Feature> observations = dmiApiService.getObservations(stationId, lastObserved);
-        return weatherRedisService.saveWeatherData(observations);
-
-
-        //log.info("Number of new observations: {}", observations.features().size());
+        return weatherPropertiesService.getLastObserved(stationId) // Mono<Integer>
+                .doOnNext(lastObserved -> log.info("Last observed: {}", lastObserved))
+                .flatMap(lastObserved -> {
+                    Flux<Feature> observations = dmiApiService.getObservations(stationId, lastObserved);
+                    return weatherRedisService.saveWeatherData(observations); // Mono<Void>
+                });
     }
 }

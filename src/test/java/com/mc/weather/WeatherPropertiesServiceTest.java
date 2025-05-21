@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.ZSetOperations;
 import reactor.core.publisher.Flux;
 
 import java.time.Instant;
@@ -21,7 +22,6 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@Disabled
 @ExtendWith(MockitoExtension.class)
 class WeatherPropertiesServiceTest {
 
@@ -30,6 +30,9 @@ class WeatherPropertiesServiceTest {
 
     @Mock
     private ValueOperations<String, Object> valueOperations;
+
+    @Mock
+    private ZSetOperations<String, Object> zSetOps;
 
     @InjectMocks
     private WeatherPropertiesService weatherPropertiesService;
@@ -45,6 +48,7 @@ class WeatherPropertiesServiceTest {
         Long observedTimestamp = Instant.parse(properties.observed()).getEpochSecond();
 
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
         when(valueOperations.get(latestKey)).thenReturn(null); // No previous value
 
         // Act
@@ -56,6 +60,13 @@ class WeatherPropertiesServiceTest {
                 eq(feature)
         );
         verify(valueOperations).set(eq(latestKey), eq(observedTimestamp));
+
+        String expectedKey = "weather:timeseries:06186:humidity";
+        double timestamp = Instant.parse("2025-05-09T02:00:00Z").getEpochSecond();
+
+        // Check that time serie was saved
+        verify(zSetOps).add(eq(expectedKey), eq(22.5), eq(timestamp));
+
     }
 
     @Test
@@ -71,6 +82,7 @@ class WeatherPropertiesServiceTest {
 
         // Redis mocks
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
         when(valueOperations.get(latestKey)).thenReturn((int) existingLatest); // simulate stored latest
 
         // Act
@@ -99,6 +111,7 @@ class WeatherPropertiesServiceTest {
 
         // Redis mocks
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
         when(valueOperations.get(latestKey)).thenReturn((int) existingLatest); // simulate stored latest
 
         // Act

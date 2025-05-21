@@ -36,18 +36,17 @@ public class DmiObservationController {
     private WeatherTimeSeriesService weatherTimeSeriesService;
 
     @GetMapping("/timeserie/{station}/{serie}")
-    public List<TimeSeriesPoint> getTimeSerie(@PathVariable String station,
+    public Flux<TimeSeriesPoint> getTimeSerie(@PathVariable String station,
                                               @PathVariable String serie,
                                               @RequestParam(required = false) Long from,
                                               @RequestParam(required = false) Long to) {
-
-       retrieveData(station).subscribe();
 
         long oneDayAgo = Instant.now().minus(1, ChronoUnit.DAYS).getEpochSecond();;
         from = Objects.requireNonNullElse(from, oneDayAgo);
         to = Objects.requireNonNullElse(to, (long) Double.POSITIVE_INFINITY);
 
-        return  weatherTimeSeriesService.getTimeSeries(station, serie, from, to);
+        return retrieveData(station)
+                .thenMany(weatherTimeSeriesService.getTimeSeries(station, serie, from, to));
     }
 
     private Mono<Void> retrieveData(String stationId) {

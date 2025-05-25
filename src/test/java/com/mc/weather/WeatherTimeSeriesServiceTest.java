@@ -3,14 +3,16 @@ package com.mc.weather;
 import com.mc.weather.data.dto.TimeSeriesPoint;
 import com.mc.weather.redis.RedisKeyBuilder;
 import com.mc.weather.redis.WeatherTimeSeriesService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.testng.MockitoTestNGListener;
 import org.springframework.data.domain.Range;
 import org.springframework.data.redis.connection.Limit;
 import org.springframework.data.redis.core.*;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Listeners;
+import org.testng.annotations.Test;
 import reactor.core.publisher.Flux;
 
 import java.time.Instant;
@@ -18,10 +20,11 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertEquals;
 
-class WeatherTimeSeriesServiceTest {
+@Listeners(MockitoTestNGListener.class)
+public class WeatherTimeSeriesServiceTest {
 
     @Mock
     private ReactiveRedisTemplate<String, Object> redisTemplate;
@@ -32,13 +35,12 @@ class WeatherTimeSeriesServiceTest {
     @InjectMocks
     private WeatherTimeSeriesService weatherTimeSeriesService;
 
-    @BeforeEach
+    @BeforeMethod
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
     }
 
-     @Test
+    @Test
     public void testGetTimeSeries() {
         // Given
         String stationId = "06186";

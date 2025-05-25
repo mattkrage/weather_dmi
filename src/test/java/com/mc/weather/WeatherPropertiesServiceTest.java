@@ -4,13 +4,15 @@ import com.mc.weather.data.dmi.Feature;
 import com.mc.weather.data.dmi.Properties;
 import com.mc.weather.redis.RedisKeyBuilder;
 import com.mc.weather.redis.WeatherPropertiesService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 import org.springframework.data.redis.core.*;
+
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Listeners;
+import org.testng.annotations.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -19,9 +21,10 @@ import java.time.Instant;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import org.mockito.testng.MockitoTestNGListener;
 
-@ExtendWith(MockitoExtension.class)
-class WeatherPropertiesServiceTest {
+@Listeners(MockitoTestNGListener.class)
+public class WeatherPropertiesServiceTest {
 
     @Mock
     private ReactiveRedisTemplate<String, Object> reactiveRedisTemplate;
@@ -35,7 +38,9 @@ class WeatherPropertiesServiceTest {
     @InjectMocks
     private WeatherPropertiesService weatherPropertiesService;
 
-    @BeforeEach
+    private AutoCloseable mocks;
+
+    @BeforeMethod
     void setup() {
         when(reactiveRedisTemplate.opsForValue()).thenReturn(valueOperations);
         when(reactiveRedisTemplate.opsForZSet()).thenReturn(zSetOps);

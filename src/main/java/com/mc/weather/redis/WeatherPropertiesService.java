@@ -64,6 +64,7 @@ public class WeatherPropertiesService {
 
 
     public Mono<Integer> getLastObserved(String stationId) {
+        log.info("FFFFFFFFDD");
         String key = RedisKeyBuilder.buildKeyForLatestTimestamp(stationId);
         return reactiveRedisTemplate.opsForValue()
                 .get(key)

@@ -5,7 +5,6 @@ import com.mc.weather.redis.RedisKeyBuilder;
 import com.mc.weather.redis.WeatherTimeSeriesService;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.testng.MockitoTestNGListener;
 import org.springframework.data.domain.Range;
 import org.springframework.data.redis.connection.Limit;

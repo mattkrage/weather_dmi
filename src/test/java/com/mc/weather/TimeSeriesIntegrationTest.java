@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testng.annotations.AfterMethod;
@@ -48,16 +49,16 @@ public class TimeSeriesIntegrationTest extends AbstractTestNGSpringContextTests 
     @Autowired
     private WebTestClient webTestClient;
 
-    @MockBean
+    @MockitoBean
     private WeatherTimeSeriesService queryService;
 
-    @MockBean
+    @MockitoBean
     private WeatherPropertiesService propertyService;
 
-    @MockBean
+    @MockitoBean
     private WeatherRedisService redisService;
 
-    @MockBean
+    @MockitoBean
     private DmiApiService dmiApiService;
 
 

@@ -8,6 +8,8 @@ import com.mc.weather.redis.WeatherRedisService;
 import com.mc.weather.dmi.DmiApiService;
 import com.mc.weather.redis.WeatherTimeSeriesService;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.*;
@@ -20,10 +22,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/dmi")
 public class DmiObservationController {
+
+    private static final Logger log = LoggerFactory.getLogger(DmiObservationController.class);
 
     @Autowired
     private DmiApiService dmiApiService;
